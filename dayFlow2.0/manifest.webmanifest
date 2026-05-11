@@ -1,0 +1,21 @@
+{
+  "name": "DayFlow",
+  "short_name": "DayFlow",
+  "description": "DayFlow - Live Krypto Dashboard als installierbare App.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1421",
+  "theme_color": "#0d1421",
+  "categories": ["finance", "productivity", "utilities"],
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./icons/dayflow-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
