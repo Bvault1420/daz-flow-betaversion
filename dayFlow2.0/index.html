@@ -5607,7 +5607,7 @@
         <div class="chart-card">
           <div class="chart-header">
             <span id="walletChartHeaderTitle">Preis‑Chart (1‑Min Candles, Binance)</span>
-            <span class="muted" id="walletChartInfo">Live‑Updates via WebSocket</span>
+            <span class="muted" id="walletChartInfo">Live‑Updates via TradingView</span>
           </div>
           <div id="walletChartContainer" class="chart-fixed-md"></div>
         </div>
@@ -5763,7 +5763,7 @@
               <th>#</th>
               <th id="thName">Name</th>
               <th id="thPrice">Preis</th>
-              <th>1h %</th>
+              <th id="thType">Typ</th>
               <th>24h %</th>
               <th>7d %</th>
               <th id="thMarketCap">Marktkap.</th>
@@ -6140,7 +6140,7 @@
     const detailTabContent = document.getElementById("detailTabContent");
     const chartErrorEl = document.getElementById("chartError");
 
-    const timeframeButtons = document.querySelectorAll(".timeframe-btn");
+    const timeframeButtons = document.querySelectorAll("#detailView .timeframe-btn");
     const orderbookAsksEl = document.getElementById("orderbookAsks");
     const orderbookBidsEl = document.getElementById("orderbookBids");
     const orderbookSpreadEl = document.getElementById("orderbookSpread");
@@ -6605,9 +6605,11 @@
         volume: "Volumen (24h)",
         overview: "Overview",
         markets: "Markets",
+        alerts: "Alerts",
         news: "News",
         detailOverviewText: "Overview: Live‑Preis, Market Cap, Volumen und Supply des ausgewählten Coins. Der Chart zeigt echte 1‑Minuten‑Candles von Binance (500 Candles + Live‑Updates).",
         detailMarketsText: "Markets: Rechts siehst du echte Binance‑Spot‑ und USDT‑M‑Futures‑Daten für dieses Symbol.",
+        detailAlertsText: "Alerts: Setze Preis-Alerts für diesen Coin, um bei bestimmten Preisniveaus benachrichtigt zu werden.",
         detailNewsText: "News: Hier könntest du später echte News‑Feeds, On‑Chain‑Daten oder Social‑Sentiment integrieren.",
         watchTitle: "Zur Watchlist hinzufügen",
         emptyWatchlist: "Deine Watchlist ist noch leer. Klicke auf das Sternchen neben einer Kryptowährung, um sie hinzuzufügen.",
@@ -6703,9 +6705,11 @@
         volume: "Volume (24h)",
         overview: "Overview",
         markets: "Markets",
+        alerts: "Alerts",
         news: "News",
         detailOverviewText: "Overview: Live price, market cap, volume and supply of the selected coin. The chart shows real 1-minute Binance candles (500 candles + live updates).",
         detailMarketsText: "Markets: On the right you can see real Binance spot and USDT-M futures data for this symbol.",
+        detailAlertsText: "Alerts: Set price alerts for this coin to get notified at certain price levels.",
         detailNewsText: "News: Later you could integrate real news feeds, on-chain data or social sentiment here.",
         watchTitle: "Add to watchlist",
         emptyWatchlist: "Your watchlist is still empty. Click the star next to a cryptocurrency to add it.",
@@ -6801,9 +6805,11 @@
         volume: "Volume (24h)",
         overview: "Panoramica",
         markets: "Mercati",
+        alerts: "Avvisi",
         news: "Notizie",
         detailOverviewText: "Panoramica: prezzo live, market cap, volume e offerta della coin selezionata. Il grafico mostra vere candele Binance a 1 minuto (500 candele + aggiornamenti live).",
         detailMarketsText: "Mercati: a destra vedi dati reali Binance spot e futures USDT-M per questo simbolo.",
+        detailAlertsText: "Avvisi: imposta avvisi di prezzo per questa coin per essere notificato a determinati livelli di prezzo.",
         detailNewsText: "Notizie: qui in futuro potresti integrare feed di notizie reali, dati on-chain o sentiment social.",
         watchTitle: "Aggiungi alla watchlist",
         emptyWatchlist: "La tua watchlist è ancora vuota. Clicca sulla stella accanto a una criptovaluta per aggiungerla.",
@@ -6899,9 +6905,11 @@
         volume: "Volume (24h)",
         overview: "Aperçu",
         markets: "Marchés",
+        alerts: "Alertes",
         news: "Actualités",
         detailOverviewText: "Aperçu : prix en direct, capitalisation, volume et offre de la coin sélectionnée. Le graphique affiche de vraies bougies Binance d'une minute (500 bougies + mises à jour en direct).",
         detailMarketsText: "Marchés : à droite, tu vois les vraies données Binance spot et futures USDT-M pour ce symbole.",
+        detailAlertsText: "Alertes : définis des alertes de prix pour cette coin afin d'être notifié à certains niveaux de prix.",
         detailNewsText: "Actualités : ici tu pourras plus tard intégrer de vrais flux d'actualités, données on-chain ou sentiment social.",
         watchTitle: "Ajouter à la watchlist",
         emptyWatchlist: "Ta watchlist est encore vide. Clique sur l'étoile à côté d'une cryptomonnaie pour l'ajouter.",
@@ -7046,6 +7054,7 @@
       document.getElementById("marketsThVolume").textContent = t("volume");
       document.querySelector('.detail-tab[data-tab="overview"]').textContent = t("overview");
       document.querySelector('.detail-tab[data-tab="markets"]').textContent = t("markets");
+      document.querySelector('.detail-tab[data-tab="alerts"]').textContent = t("alerts");
       document.querySelector('.detail-tab[data-tab="news"]').textContent = t("news");
       updateDetailTabContent(document.querySelector(".detail-tab.active")?.dataset.tab || "overview");
       renderAffiliateStrips();
@@ -7445,10 +7454,14 @@
     }
 
     function getPaperPrice(coin) {
-      if (paperLiveBook.markPrice && coin?.symbol?.toUpperCase() === paperLiveBook.symbol) {
+      if (!coin) return 0;
+      if (paperLiveBook.markPrice && coin.symbol && coin.symbol.toUpperCase() === paperLiveBook.symbol) {
         return paperLiveBook.markPrice;
       }
-      const liveCoin = allCoins.find(c => c.id === coin.id || c.symbol.toLowerCase() === coin.symbol.toLowerCase());
+      const liveCoin = allCoins.find(c =>
+        (coin.id && c.id === coin.id) ||
+        (coin.symbol && c.symbol && c.symbol.toLowerCase() === coin.symbol.toLowerCase())
+      );
       return liveCoin?.current_price || coin.current_price || 0;
     }
 
@@ -7543,6 +7556,8 @@
       if (closed.length) {
         paperOrderMessage.textContent = `Position geschlossen: ${closed.join(", ")}`;
         paperOrderMessage.className = "auth-message success";
+        renderPaperPositions();
+        updatePaperTradingSummary();
         renderPaperHistory();
         savePaperTrading();
       }
@@ -7674,6 +7689,27 @@
       }).join('');
     }
 
+    function formatPaperHistoryType(entry) {
+      const t = entry.type || "";
+      const side = entry.side === "buy" ? "Kauf" : "Verkauf";
+      if (t.startsWith("close-")) {
+        const reason = t.replace("close-", "");
+        const reasonLabel = reason === "liquidation" ? "Liquidation"
+          : reason === "stop-loss" ? "Stop-Loss"
+          : reason === "take-profit" ? "Take-Profit"
+          : reason.charAt(0).toUpperCase() + reason.slice(1);
+        return `Close (${reasonLabel})`;
+      }
+      if (t.startsWith("open-")) {
+        const parts = t.replace("open-", "").split("-");
+        const orderType = parts[0] === "limit" ? "Limit" : "Market";
+        const lev = parts[1] || "";
+        return `Open ${orderType} ${lev}`.trim();
+      }
+      if (t === "limit") return `Limit ${side}`;
+      return `Market ${side}`;
+    }
+
     function renderPaperHistory() {
       if (!paperTradingData.history.length) {
         paperHistoryTableBody.innerHTML = "";
@@ -7686,7 +7722,7 @@
           <tr>
             <td>${entry.time}</td>
             <td>${entry.symbol.toUpperCase()}</td>
-            <td>${entry.type === 'limit' ? `${entry.side === 'buy' ? 'Limit Kauf' : 'Limit Verkauf'}` : `${entry.side === 'buy' ? 'Market Kauf' : 'Market Verkauf'}`}</td>
+            <td>${formatPaperHistoryType(entry)}</td>
             <td>$${formatNumber(entry.price, 2)}</td>
             <td>${entry.quantity.toFixed(6)}</td>
             <td>$${formatNumber(entry.usdValue, 2)}</td>
@@ -8382,11 +8418,18 @@
       if (!el) return;
       const picks = getScannerPicks();
       el.innerHTML = picks.map(p => `
-        <div class="scanner-card" data-coin-id="${p.coin.id}">
+        <div class="scanner-card" data-coin-id="${p.coin.id}" style="cursor:pointer;">
           <strong>${escapeHtml(p.label)} · ${escapeHtml(p.coin.name)} (${(p.coin.symbol || "").toUpperCase()})</strong>
           <span>${escapeHtml(p.reason)} · ${getCoinCategory(p.coin)} · Preis $${formatNumber(p.coin.current_price, 2)}</span>
         </div>
       `).join("") || `<div class="smart-list-item"><strong>Noch keine Scanner-Daten</strong>Warte, bis Marktdaten geladen wurden.</div>`;
+      if (!el._scannerClickBound) {
+        el.addEventListener("click", (event) => {
+          const card = event.target.closest(".scanner-card[data-coin-id]");
+          if (card) openDetail(card.dataset.coinId);
+        });
+        el._scannerClickBound = true;
+      }
     }
 
     function buildCoinAiReport(coin) {
@@ -8440,7 +8483,7 @@
       const cats = Object.entries(categories).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}: ${v}`).join(" · ");
       el.innerHTML = `
         <div class="smart-list-item"><strong>Performance</strong>${coins.length} Coins · Durchschnitt 24h: ${changeText(avg)}.</div>
-        <div class="smart-list-item"><strong>Bester Watch-Coin</strong>${best.name}: ${changeText(best.price_change_percentage_24h)}.</div>
+        <div class="smart-list-item"><strong>Bester Watch-Coin</strong>${escapeHtml(best.name)}: ${changeText(best.price_change_percentage_24h)}.</div>
         <div class="smart-list-item"><strong>Kategorien</strong>${escapeHtml(cats || "Noch keine Kategorie erkannt.")}</div>
       `;
     }
@@ -8460,6 +8503,13 @@
         </div>`;
       }).join("");
       el.innerHTML = tiles || `<div class="muted">Keine Heatmap-Daten.</div>`;
+      if (!el._heatmapClickBound) {
+        el.addEventListener("click", (event) => {
+          const tile = event.target.closest(".heat-tile[data-coin-id]");
+          if (tile) openDetail(tile.dataset.coinId);
+        });
+        el._heatmapClickBound = true;
+      }
     }
 
     function renderSmartNewsSentiment() {
@@ -8645,6 +8695,8 @@
         `;
       } else if (tabName === "markets") {
         detailTabContent.innerHTML = `<p class="muted">${t("detailMarketsText")}</p>`;
+      } else if (tabName === "alerts") {
+        detailTabContent.innerHTML = `<p class="muted">${t("detailAlertsText")}</p>`;
       } else if (tabName === "news") {
         detailTabContent.innerHTML = `<p class="muted">${t("detailNewsText")}</p>`;
       }
@@ -9500,6 +9552,19 @@
       });
     });
 
+    if (walletTimeframeButtons) {
+      const wBtns = walletTimeframeButtons.querySelectorAll(".timeframe-btn");
+      wBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          wBtns.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          if (currentWalletCoin) {
+            initWalletChart(currentWalletCoin, btn.dataset.timeframe);
+          }
+        });
+      });
+    }
+
     function updateDetailUI(coin) {
       detailNameEl.textContent = coin.name;
       detailSymbolEl.textContent = coin.symbol.toUpperCase();
@@ -9810,10 +9875,6 @@
       // Notification fallback is intentionally silent in production.
     }
 
-    async function loadBinanceCandles(symbol) {
-      return [];
-    }
-
     async function loadBinanceMarkets(symbol) {
       marketsTableBody.innerHTML = "";
       const spotSymbol = symbol + "USDT";
@@ -9872,20 +9933,26 @@
       const url = `wss://stream.binance.com:9443/ws/${stream}`;
       ws = new WebSocket(url);
       ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (!msg.c) return;
-        if (currentDetailCoin && currentDetailCoin.symbol.toUpperCase() === symbol.toUpperCase()) {
-          const oldPrice = currentDetailCoin.current_price;
-          const newPrice = parseFloat(msg.c);
-          currentDetailCoin.current_price = newPrice;
-          detailPriceEl.dataset.prev = oldPrice;
-          detailPriceEl.textContent = "$" + formatNumber(newPrice, 2);
-          detailPriceEl.classList.remove("price-flash-up", "price-flash-down");
-          void detailPriceEl.offsetWidth;
-          detailPriceEl.classList.add(newPrice >= oldPrice ? "price-flash-up" : "price-flash-down");
+        try {
+          const msg = JSON.parse(event.data);
+          if (!msg.c) return;
+          if (currentDetailCoin && currentDetailCoin.symbol.toUpperCase() === symbol.toUpperCase()) {
+            const oldPrice = currentDetailCoin.current_price;
+            const newPrice = parseFloat(msg.c);
+            currentDetailCoin.current_price = newPrice;
+            detailPriceEl.dataset.prev = oldPrice;
+            detailPriceEl.textContent = "$" + formatNumber(newPrice, 2);
+            detailPriceEl.classList.remove("price-flash-up", "price-flash-down");
+            void detailPriceEl.offsetWidth;
+            detailPriceEl.classList.add(newPrice >= oldPrice ? "price-flash-up" : "price-flash-down");
+          }
+        } catch (e) {
+          // Ignore malformed WebSocket payloads
         }
       };
-      ws.onerror = () => {};
+      ws.onerror = (err) => {
+        console.warn("Binance WebSocket error:", err);
+      };
     }
 
     function closeOrderbookWS() {
@@ -10314,7 +10381,7 @@
       } catch (e) {
         if (ethEl) ethEl.textContent = "Fehler";
         if (usdEl) usdEl.textContent = "—";
-        dfSetMsg(document.getElementById("dfMsgSend"), String(e.message || e), "err");
+        console.warn("Balance refresh failed:", e);
       }
     }
 
@@ -10872,11 +10939,12 @@
       }
     }
 
-    function initWalletChart(symbol) {
+    function initWalletChart(symbol, timeframe) {
       const container = walletChartContainer;
       container.innerHTML = "";
 
       const tvSymbol = "BINANCE:" + symbol + "USDT";
+      const interval = timeframe || "1";
 
       const script = document.createElement("script");
       script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
@@ -10887,7 +10955,7 @@
       script.innerHTML = JSON.stringify({
         autosize: true,
         symbol: tvSymbol,
-        interval: "1",
+        interval: interval,
         timezone: "Europe/Berlin",
         theme: "dark",
         style: "1",
@@ -11863,7 +11931,10 @@
         const mcap = c.market_cap != null ? formatBigNumber(c.market_cap) : "n/a";
         return `${i + 1}. ${c.name} (${c.symbol.toUpperCase()}): ${price}, 24h ${ch24}, MCap $${mcap}`;
       }).join("\n");
-      const watchSyms = (watchlist || []).map(w => (w.symbol || "").toUpperCase()).filter(Boolean).join(", ") || "leer";
+      const watchSyms = (watchlist || []).map(id => {
+        const coin = allCoins.find(c => String(c.id) === String(id));
+        return coin ? (coin.symbol || "").toUpperCase() : String(id).toUpperCase();
+      }).filter(Boolean).join(", ") || "leer";
       const lang = currentLanguage || "de";
       const langLabel = lang === "de" ? "Deutsch" : lang === "en" ? "English" : lang;
       const today = new Date().toISOString().slice(0, 10);
